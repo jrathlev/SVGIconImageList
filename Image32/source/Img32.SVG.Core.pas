@@ -14,6 +14,8 @@ unit Img32.SVG.Core;
 *              https://www.boost.org/LICENSE_1_0.txt                           *
 *******************************************************************************)
 
+// modified June 2025 J. Rathlev
+
 interface
 
 {$I Img32.inc}
@@ -2083,6 +2085,7 @@ begin
   c2 := SkipBlanksEx(c, endC);
   c := ParseNameLength(c2, endC);
   ToAsciiLowerUTF8String(c2, c, name);
+  if AnsiStartsText('svg:',name) then delete(name,1,4);  // JR
 
   //load the class's style (ie undotted style) if found.
   style := owner.classStyles.GetStyle(name);

@@ -14,6 +14,9 @@ unit Img32.SVG.Reader;
 *              https://www.boost.org/LICENSE_1_0.txt                           *
 *******************************************************************************)
 
+// J. Rathlev, June 2025
+// new function "ReRender": force new rendering
+
 interface
 
 {$I Img32.inc}
@@ -183,6 +186,7 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure Clear;
+    function ReRender: Boolean;      // JR
     procedure DrawImage(img: TImage32; scaleToImage: Boolean);
     function  LoadFromStream(stream: TStream): Boolean;
     function  LoadFromFile(const filename: string): Boolean;
@@ -5662,6 +5666,23 @@ begin
   Result := fRootElement.LoadContent;
 end;
 //------------------------------------------------------------------------------
+
+function TSvgReader.ReRender: Boolean;  // JR
+var
+  i : integer;
+begin
+  FreeAndNil(fRootElement);          // same as clear without clearing fSvgParser
+  fIdList.Clear;
+  fLinGradRenderer.Clear;
+  fRadGradRenderer.Clear;
+  currentColor:=clBlack32;
+  userSpaceBounds:=NullRectD;
+  for i:=0 to fSimpleDrawList.Count - 1 do
+    Dispose(PSimpleDrawData(fSimpleDrawList[i]));
+  fSimpleDrawList.Clear;
+  Result:=LoadInternal;              // force new rendering
+end;
+// ------------------------------------------------------------------------------
 
 function TSvgReader.LoadFromFile(const filename: string): Boolean;
 begin

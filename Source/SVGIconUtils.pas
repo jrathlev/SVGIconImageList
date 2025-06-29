@@ -61,12 +61,18 @@ const
 function UpdateSVGIconListView(const AListView: TListView;
   const ACategory: string = '';
   const AIncludeIndex: Boolean = True): Integer;
+
 function UpdateSVGIconListViewCaptions(const AListView: TListView;
   const AShowCaption: Boolean = True): Integer;
+
 procedure SVGExportToPng(const AWidth, AHeight: Integer;
-  FSVG: ISVG; const AOutFolder: string;
-  const AFileName: string = '');
+  FSVG: ISVG; const AFileName: string; KeepAspectRatio: Boolean = True); overload;
+
+procedure SVGExportToPng(const AWidth, AHeight: Integer;
+  FSVG: ISVG; const AOutFolder,AFileName: string; KeepAspectRatio: Boolean = True); overload;
+
 function PNG4TransparentBitMap(aBitmap: TBitmap): TPNGImage;
+
 procedure SVGCopyToClipboardAsPng(const AWidth, AHeight: Integer; FSVG: ISVG);
 
 implementation
@@ -169,8 +175,14 @@ begin
 end;
 
 procedure SVGExportToPng(const AWidth, AHeight: Integer;
-  FSVG: ISVG; const AOutFolder: string;
-  const AFileName: string = '');
+  FSVG: ISVG; const AOutFolder,AFileName: string; KeepAspectRatio: Boolean);
+begin
+  SVGExportToPng(AWidth,AHeight,FSVG,IncludeTrailingPathDelimiter(AOutFolder)+
+      StringReplace(AFileName, '\', '_',[rfReplaceAll]),KeepAspectRatio);
+  end;
+
+procedure SVGExportToPng(const AWidth, AHeight: Integer;
+  FSVG: ISVG; const AFileName: string; KeepAspectRatio: Boolean);
 var
   LImagePng: TPngImage;
   LBitmap: TBitmap;
@@ -189,12 +201,10 @@ begin
     LBitmap.Canvas.Brush.Color := clNone;
     LBitmap.Canvas.FillRect(Rect(0, 0, AWidth, AHeight));
 
-    FSVG.PaintTo(LBitmap.Canvas.Handle, TRectF.Create(0, 0, AWidth, AHeight));
+    FSVG.PaintTo(LBitmap.Canvas.Handle, TRectF.Create(0, 0, AWidth, AHeight),KeepAspectRatio);
 
     LImagePng := PNG4TransparentBitMap(LBitmap);
-    LFileName := IncludeTrailingPathDelimiter(AOutFolder)+
-      StringReplace(AFileName, '\', '_',[rfReplaceAll]);
-    LFileName := ChangeFileExt(LFileName,'.png');
+    LFileName := ChangeFileExt(AFileName,'.png');         // JR
     LImagePng.SaveToFile(LFileName);
   finally
     LBitmap.Free;

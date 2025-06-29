@@ -2,7 +2,7 @@
 {                                                                              }
 {       SVG Image in TPicture: useful to show a Scalable Vector Graphic        }
 {                                                                              }
-{       Copyright (c) 2019-2025 (Ethea S.r.l.)                                 }
+{       Copyright (c) 2019-2024 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {       Contributors:                                                          }
 {                                                                              }
@@ -84,6 +84,7 @@ type
     FImageChangeLink: TChangeLink;
     FFixedColor: TColor;
     FGrayScale: Boolean;
+    FGrayIfDisabled: Boolean;
     FApplyFixedColorToRootOnly: Boolean;
     procedure SetCenter(Value: Boolean);
     procedure SetProportional(Value: Boolean);
@@ -95,6 +96,7 @@ type
     procedure ImageListChange(Sender: TObject);
     procedure SetFixedColor(const Value: TColor);
     procedure SetGrayScale(const Value: Boolean);
+    procedure SetGrayIfDisabled(const Value: Boolean);
     procedure SetApplyFixedColorToRootOnly(const Value: Boolean);
     function GetInheritedFixedColor: TColor;
     function GetInheritedApplyToRootOnly: Boolean;
@@ -119,6 +121,7 @@ type
     function IsImageNameStored: Boolean;
     {$ENDIF}
     function IsImageIndexStored: Boolean;
+    procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
   protected
     procedure UpdateImage; virtual;
     {$IFDEF D10_4+}
@@ -160,6 +163,7 @@ type
     property FixedColor: TColor read FFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
     property ApplyFixedColorToRootOnly: Boolean read FApplyFixedColorToRootOnly write SetApplyFixedColorToRootOnly default false;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
+    property GrayIfDisabled: Boolean read FGrayIfDisabled write FGrayIfDisabled default false;
     property Align;
     property Anchors;
     property Constraints;
@@ -266,6 +270,7 @@ begin
   {$ENDIF}
   FFixedColor := SVG_INHERIT_COLOR;
   FGrayScale := False;
+  FGrayIfDisabled := False;
   //ParentBackground := True;
   FImageChangeLink := TChangeLink.Create;
   FImageChangeLink.OnChange := ImageListChange;
@@ -377,6 +382,12 @@ end;
 function TSVGIconImage.GetSVGText: string;
 begin
   Result := SVG.Source;
+end;
+
+procedure TSVGIconImage.CMEnabledChanged(var Message: TMessage);
+begin
+  if FGrayIfDisabled then GrayScale:=not Enabled;
+  inherited;
 end;
 
 procedure TSVGIconImage.ImageListChange(Sender: TObject);
@@ -687,6 +698,15 @@ begin
   end;
 end;
 
+procedure TSVGIconImage.SetGrayIfDisabled(const Value: Boolean);
+begin
+  if Value <> FGrayIfDisabled then
+  begin
+    FGrayIfDisabled := Value;
+    Repaint;
+  end;
+end;
+
 procedure TSVGIconImage.SetImageIndex(const Value: TImageIndex);
 begin
   if FImageIndex <> Value then
@@ -698,7 +718,8 @@ begin
     {$ENDIF}
     CheckAutoSize;
     UpdateImage;
-    Invalidate;
+    Repaint;
+//    Invalidate;
   end;
 end;
 

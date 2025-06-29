@@ -4,6 +4,10 @@
  Purpose:   High-level encapsuation of Svg functionality for Image32 Library
  History:
 -----------------------------------------------------------------------------}
+
+// J. Rathlev, June 2025
+// bug fix on issue #305: force new rendering after change of image size
+
 unit Image32SVGFactory;
 
 interface
@@ -199,13 +203,20 @@ var
   dx,dy: double;
   LFixedColor: TColor32;
   dd: TDrawData;
+  chg : boolean;
 begin
-  //Define Image32 output size
-  FImage32.SetSize(Round(R.Width), Round(R.Height));
+  //Define Image32 output size   // JR
+  with FImage32 do begin
+    w:=Round(R.Width); h:=Round(R.Height);
+    chg:=(Width<>w) or (Height<>h);
+    SetSize(w,h);
+    if chg then fSvgReader.ReRender;
+    end;
 
   //Update FsvgReader BEFORE calling FsvgReader.DrawImage
   //to apply fixed color to root only
   if FApplyFixedColorToRootOnly and not FGrayScale and
+    assigned(fSvgReader.RootElement) and   // JR see issue #304
     (FFixedColor <> TColors.SysDefault) and
     (FFixedColor <> TColors.SysNone) then
   begin

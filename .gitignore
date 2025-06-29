@@ -69,3 +69,7 @@ __recovery/
 modules/
 
 Demo/Bin
+
+# Other
+*.backup
+*.bak
