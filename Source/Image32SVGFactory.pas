@@ -185,32 +185,33 @@ begin
 end;
 
 procedure TImage32SVG.LoadFromStream(Stream: TStream);
-Var
-  OldPos : Int64;
+//Var
+//  OldPos : Int64;
 begin
   // read and save the Source
-  OldPos := Stream.Position;
+//  OldPos := Stream.Position;
   SourceFromStream(Stream);
   // Restore Position
-  Stream.Position := OldPos;
+//  Stream.Position := OldPos;
   // Now create the SVG
-  fSvgReader.LoadFromStream(Stream);
+//  fSvgReader.LoadFromStream(Stream);  //  needless because already called in SourceFromStream
   UpdateSizeInfo;
 end;
 
 procedure TImage32SVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
 var
   dx,dy: double;
+  w,h : integer;
   LFixedColor: TColor32;
   dd: TDrawData;
   chg : boolean;
 begin
-  //Define Image32 output size   // JR
+  //Define Image32 output size   // JR see issue #305
   with FImage32 do begin
     w:=Round(R.Width); h:=Round(R.Height);
     chg:=(Width<>w) or (Height<>h);
     SetSize(w,h);
-    if chg then fSvgReader.ReRender;
+    if chg then fSvgReader.ReBuild; // force rendering
     end;
 
   //Update FsvgReader BEFORE calling FsvgReader.DrawImage
